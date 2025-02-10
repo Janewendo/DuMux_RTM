@@ -71,9 +71,9 @@ class TwoPICPVolumeVariables
         comp1Idx = nCompIdx,
         HtotalIdx = FS::HtotalIdx,
         HIdx = FS::HIdx,
-		OHIdx = FS::OHIdx,
-		CO2aqtotalIdx = FS::CO2aqtotalIdx,
-		CO2aqIdx = FS::CO2aqIdx,
+	OHIdx = FS::OHIdx,
+	CO2aqtotalIdx = FS::CO2aqtotalIdx,
+	CO2aqIdx = FS::CO2aqIdx,
         // phase presence enums
         secondPhaseOnly = ModelTraits::Indices::secondPhaseOnly,
         firstPhaseOnly = ModelTraits::Indices::firstPhaseOnly,
@@ -135,7 +135,7 @@ public:
         //we need porosity and permeability in completeFluidState for Leverett scaling of capillary pressure!
         updateSolidVolumeFractions(elemSol, problem, element, scv, solidState_, numFluidComps);
         
-		porosity_ = problem.spatialParams().porosity(element, scv, elemSol);
+	porosity_ = problem.spatialParams().porosity(element, scv, elemSol);
 
         permeability_ = problem.spatialParams().permeability(element, scv, elemSol);
         
@@ -330,7 +330,6 @@ public:
                 fluidState.setMoleFractionSecComp(wPhaseIdx, compIdx, 0);
                 fluidState.setMoleFractionSecComp(nPhaseIdx, compIdx, 0);
             }
-
 		}
 		
         else if (phasePresence == wPhaseOnly)
@@ -366,8 +365,8 @@ public:
             ComputeFromReferencePhase::solve(fluidState,
                                              paramCache,
                                              phase0Idx);
-                        Scalar xnH2O;
-                        Scalar xwCO2;
+           Scalar xnH2O;
+           Scalar xwCO2;
 
             // normalize the phase compositions
             xwCO2 = std::max(0.0, std::min(1.0, xwCO2));
@@ -384,31 +383,26 @@ public:
             fluidState.setMoleFraction(nPhaseIdx, nCompIdx, 1-xnH2O);
         }
 
-		Scalar rhoMolar = 0.0; // added by du Declare rhoMolar outside the loop and initialize it
-		paramCache.updateAll(fluidState);
+	Scalar rhoMolar = 0.0; // added by du Declare rhoMolar outside the loop and initialize it
+	paramCache.updateAll(fluidState);
 
         for (int phaseIdx = 0; phaseIdx < ModelTraits::numPhases(); ++phaseIdx)
         {
-            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-			Scalar h = ParentType::enthalpy(fluidState, paramCache, phaseIdx);
-            // added by du
-		    rhoMolar = FluidSystem::molarDensity(fluidState, paramCache, phase0Idx);
-            // added by du           
-			fluidState.setMolarDensity(phaseIdx, rhoMolar);
-            fluidState.setDensity(phaseIdx, rho);
-            fluidState.setViscosity(phaseIdx, mu);
-            fluidState.setEnthalpy(phaseIdx, h);
+        Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
+        Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+	Scalar h = ParentType::enthalpy(fluidState, paramCache, phaseIdx);
+	rhoMolar = FluidSystem::molarDensity(fluidState, paramCache, phase0Idx);      
+	fluidState.setMolarDensity(phaseIdx, rhoMolar);
+        fluidState.setDensity(phaseIdx, rho);
+        fluidState.setViscosity(phaseIdx, mu);
+        fluidState.setEnthalpy(phaseIdx, h);
         }
 
-
            Chemistry chemistry;
-
            chemistry.calculateEquilibriumChemistry(fluidState, phasePresence, moleFrac, rhoMolar);
-		   
-		   
+		      
            fluidState.setMoleFraction(phase0Idx, CO2aqIdx, moleFrac[CO2aqtotalIdx]);
-		   fluidState.setMoleFraction(phase0Idx, HIdx, moleFrac[HtotalIdx]);
+	   fluidState.setMoleFraction(phase0Idx, HIdx, moleFrac[HtotalIdx]);
 
            for (int compIdx=numComponents; compIdx<numComponents + numSecComponents; ++compIdx)
            {
@@ -536,7 +530,7 @@ public:
     {
         Scalar value;
 		
-		if (compIdx < phaseIdx)
+	if (compIdx < phaseIdx)
             value = diffCoefficient_[phaseIdx][compIdx];
         else if (compIdx > phaseIdx)
             value = diffCoefficient_[phaseIdx][compIdx-1];
