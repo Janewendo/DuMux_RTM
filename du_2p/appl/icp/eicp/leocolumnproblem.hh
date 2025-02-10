@@ -141,16 +141,16 @@ class LEOColumnProblem : public PorousMediumFlowProblem<TypeTag>
         numSecComponents  = FluidSystem::numSecComponents ,
         pressureIdx = Indices::pressureIdx,
         switchIdx = Indices::switchIdx, //Saturation
-		xwN2Idx = FluidSystem::N2Idx, 
+	xwN2Idx = FluidSystem::N2Idx, 
         xwHIdx = FluidSystem::HIdx,
-		xwCO2aqIdx = FluidSystem::CO2aqIdx,
-		xwCO2aqtotalIdx = FluidSystem::CO2aqtotalIdx,
+	xwCO2aqIdx = FluidSystem::CO2aqIdx,
+	xwCO2aqtotalIdx = FluidSystem::CO2aqtotalIdx,
         xwHtotalIdx = FluidSystem::HtotalIdx,
         xwCO3Idx = FluidSystem::CO3Idx,	
-		xwHCO3Idx = FluidSystem::HCO3Idx,	
-		xwOHIdx = FluidSystem::OHIdx,	
+	xwHCO3Idx = FluidSystem::HCO3Idx,	
+	xwOHIdx = FluidSystem::OHIdx,	
 		
-		phiGlassIdx = numComponents,
+	phiGlassIdx = numComponents,
 		
 #if NONISOTHERMAL
         temperatureIdx = Indices::temperatureIdx,
@@ -161,7 +161,7 @@ class LEOColumnProblem : public PorousMediumFlowProblem<TypeTag>
         wCompIdx = FluidSystem::wCompIdx,
         nCompIdx = FluidSystem::nCompIdx,
         HIdx = FluidSystem::HIdx,
-		CO2aqIdx = FluidSystem::CO2aqIdx,
+	CO2aqIdx = FluidSystem::CO2aqIdx,
 
         CO3Idx = FluidSystem::CO3Idx,
         HCO3Idx = FluidSystem::HCO3Idx,
@@ -172,8 +172,8 @@ class LEOColumnProblem : public PorousMediumFlowProblem<TypeTag>
         conti1EqIdx = Indices::conti1EqIdx,
         // Phase State
         nPhaseOnly = Indices::secondPhaseOnly,
-		// added by du
-		wPhaseOnly = Indices::firstPhaseOnly,
+	// added by du
+	wPhaseOnly = Indices::firstPhaseOnly,
         bothPhases = Indices::bothPhases,
 
         // Grid and world dimension
@@ -260,15 +260,14 @@ public:
 				getline(injectionData, row);
                 while(row != "#")
                 {
-                    
-					if (row != "#")
-                        {
-                        std::istringstream ist(row);
-                        ist >> tempType;
-                        injType_.push_back(tempType);
-//                      std::cout << "size of injType: "<<injType_.size() << std::endl;
-                        }
-                    getline(injectionData, row);
+		if (row != "#")
+                {
+                std::istringstream ist(row);
+                ist >> tempType;
+                injType_.push_back(tempType);
+//              std::cout << "size of injType: "<<injType_.size() << std::endl;
+                 }
+                getline(injectionData, row);
                 }
             }
         }
@@ -358,22 +357,19 @@ public:
         BoundaryTypes bcTypes;
 	    // // set all other as Neumann boundaries
 
-	    if(globalPos[dim - 1]> this->gridGeometry().bBoxMax()[dim - 1] - eps_) 
-	    {
+	if(globalPos[dim - 1]> this->gridGeometry().bBoxMax()[dim - 1] - eps_) 
+	{
+	bcTypes.setAllDirichlet();
+	}
 
-			bcTypes.setAllDirichlet();
-		}
-
+	else if (globalPos[dim - 1]<= eps_)
+	{ 
+        bcTypes.setAllDirichlet();
+	}
 		
-        // if (globalPos[1] > this->gridGeometry().bBoxMax()[1] - eps_)
-		else if (globalPos[dim - 1]<= eps_)
-	    { 
-            bcTypes.setAllDirichlet();
-	    }
         else
-            bcTypes.setAllNeumann();
-		
-	    return bcTypes;
+        bcTypes.setAllNeumann();
+	return bcTypes;
     }
    /*!
     * \brief Evaluate the boundary conditions for a dirichlet
@@ -384,12 +380,12 @@ public:
 
 		if(globalPos[dim - 1]> this->gridGeometry().bBoxMax()[dim - 1] - eps_)
         {
-			return top_(globalPos);
-		}
+		return top_(globalPos);
+	}
 		else if(globalPos[dim - 1] <= eps_)
         {
-			return bottom_(globalPos);
-		}
+		return bottom_(globalPos);
+	}
     }
 
    /*!
@@ -426,11 +422,11 @@ public:
         NumEqVector values(0.0);
         const auto xMax = this->gridGeometry().bBoxMax()[0];
         const auto& ipGlobal = scvf.ipGlobal(); 
-		const auto& globalPos = scvf.center();
-		const auto& volVars = elemVolVars[scvf.insideScvIdx()];
+	const auto& globalPos = scvf.center();
+	const auto& volVars = elemVolVars[scvf.insideScvIdx()];
 
-           values = 0.0; //mol/m²/s
-         return values;
+        values = 0.0; //mol/m²/s
+        return values;
     }
    /*!
     * \name Volume terms
@@ -509,14 +505,11 @@ private:
     {
         PrimaryVariables priVars(0.0);
 
-		priVars.setState(bothPhases);
-		
-        priVars[pressureIdx] = initPressure_;
-		
-		priVars[switchIdx] = 0.6;
+	priVars.setState(bothPhases);	
+        priVars[pressureIdx] = initPressure_;	
+	priVars[switchIdx] = 0.6;
         priVars[xwHIdx] = initxwH_;
-		priVars[xwCO2aqIdx] = initxwCO2aq_;
-
+	priVars[xwCO2aqIdx] = initxwCO2aq_;
         priVars[phiGlassIdx] = initGlass_; // [m^3/m^3]
 
 #if NONISOTHERMAL
@@ -532,9 +525,9 @@ private:
         PrimaryVariables priVars(0.0);
         priVars[pressureIdx] = initPressure_;
         priVars.setState(bothPhases);
-		priVars[switchIdx] = 0.3;
+	priVars[switchIdx] = 0.3;
         priVars[xwHIdx] = initxwH_;
-		priVars[xwCO2aqIdx] = initxwCO2aq_;
+	priVars[xwCO2aqIdx] = initxwCO2aq_;
 
 #if NONISOTHERMAL
         priVars[temperatureIdx] = initTemperature_;
@@ -545,12 +538,11 @@ private:
     {
         PrimaryVariables priVars(0.0);
         priVars[pressureIdx] = initPressure_;
-		priVars[switchIdx] = 0.9;
+	priVars[switchIdx] = 0.9;
         priVars.setState(bothPhases);
         priVars[xwHIdx] = initxwH_*2; 
-		priVars[xwCO2aqIdx] = initxwCO2aq_*2; 
-
-		priVars[phiGlassIdx] = initGlass_;
+	priVars[xwCO2aqIdx] = initxwCO2aq_*2; 
+	priVars[phiGlassIdx] = initGlass_;
 #if NONISOTHERMAL
         priVars[temperatureIdx] = initTemperature_;
 #endif
@@ -567,7 +559,7 @@ private:
     Scalar densityN;
 	
     Scalar initxwCO2aq_;
-	Scalar initxwO2_;
+    Scalar initxwO2_;
     Scalar initxwH_;
     Scalar initGlass_;
 	
