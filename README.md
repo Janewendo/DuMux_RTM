@@ -1,4 +1,11 @@
-February 10 Update  
+February 10 Update 2  
+<br> 
+
+I simplified the system to a 2-phase model with 4 primary components and 5 secondary components, as detailed in the Du_2p folder. I attempted to modify the code to allow for the input of free ion concentrations and calculate the total concentrations in the mass balance equation. However, this approach has not been successful in running properly.  
+<br>  
+
+
+February 10 Update 1  
 <br> 
 
 I simplified the system to a 1-phase, 4 primary components, and 5 secondary components system, see Du_1p folder. I modified the code to be able to input free ion concentration, and calculate the total concentration in the mass balance equation.  
