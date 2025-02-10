@@ -22,7 +22,7 @@ class LeoMinCarbonicAcid
 {
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
-    // using SolidSystem = GetPropType<TypeTag, Properties::SolidSystem>;
+    using SolidSystem = GetPropType<TypeTag, Properties::SolidSystem>;
     using VolumeVariables = GetPropType<TypeTag, Properties::VolumeVariables>;
     using Sources = GetPropType<TypeTag, Properties::NumEqVector>;
     using Indices = typename GetPropType<TypeTag, Properties::ModelTraits>::Indices;
@@ -81,8 +81,8 @@ public:
         Scalar h2o_ = moleFracToMolarity(variable[H2OIdx], rhoMolar);
         pressure_ = fluidState.pressure(wPhaseIdx);
         temperature_ = fluidState.temperature();
-		Scalar moleFracWater = variable[H2OIdx]; //
-		Scalar n2_ = moleFracToMolarity(variable[N2Idx], rhoMolar);		
+	Scalar moleFracWater = variable[H2OIdx]; //
+	Scalar n2_ = moleFracToMolarity(variable[N2Idx], rhoMolar);		
         for (int i = 0; i < numComponents + numSecComponents; ++i)
             {				
                 if(std::isnan(variable[i]))
@@ -92,14 +92,14 @@ public:
             }
         if (phaseState == bothPhases) //both Phases: solve an open system with co2 concentration constant
         {
-			co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar)-moleFracToMolarity(variable[CO3Idx],rhoMolar)-moleFracToMolarity(variable[HCO3Idx],rhoMolar);		
-            h_ = moleFracToMolarity(variable[HIdx],rhoMolar)+moleFracToMolarity(variable[OHIdx],rhoMolar)+moleFracToMolarity(variable[CO3Idx],rhoMolar)+moleFracToMolarity(variable[HCO3Idx],rhoMolar);// -moleFracToMolarity(variable[Fe3Idx],rhoMolar);
+	co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar)-moleFracToMolarity(variable[CO3Idx],rhoMolar)-moleFracToMolarity(variable[HCO3Idx],rhoMolar);		
+        h_ = moleFracToMolarity(variable[HIdx],rhoMolar)+moleFracToMolarity(variable[OHIdx],rhoMolar)+moleFracToMolarity(variable[CO3Idx],rhoMolar)+moleFracToMolarity(variable[HCO3Idx],rhoMolar);// -moleFracToMolarity(variable[Fe3Idx],rhoMolar);
 
-		   initH_ = 8.07096e-12;//h_; //Initial guess
-           Scalar activityH = initH_;		
-	       k1_ = const1(pressure_, temperature_);
-           k2_ = const2(pressure_, temperature_);
-           kw_ = constW(pressure_, temperature_);
+	initH_ = 8.07096e-12;//h_; //Initial guess
+        Scalar activityH = initH_;		
+	k1_ = const1(pressure_, temperature_);
+        k2_ = const2(pressure_, temperature_);
+        kw_ = constW(pressure_, temperature_);
 		   
            Scalar tolAbs = 1e-20; //1e-20;
            Scalar tolRel = 1e-20;// 1e-15;
@@ -118,25 +118,25 @@ public:
                 }
             }
 
-		    H_Conly(activityH);
+	H_Conly(activityH);
 		
-            //update mole fractions in the variable vector for the open system
-		    htotal_ = h_ - oh_ - co3_ - hco3_ ;//+ fe3_ ;
-		    co2aqtotal_ = co2aq_ + co3_ + hco3_;		
-            Scalar totalMolarity = h2o_ + n2_ +  co2aqtotal_ + htotal_;
-			variable[CO2aqIdx] = co2aq_/totalMolarity;
-			variable[CO2aqtotalIdx] = co2aqtotal_/totalMolarity;
-            variable[HCO3Idx] = hco3_/totalMolarity;
-            variable[CO3Idx] = co3_/totalMolarity;
-            variable[OHIdx] = oh_/totalMolarity;
-            variable[HIdx] = h_/totalMolarity;
-            variable[HtotalIdx] = htotal_/totalMolarity;			
+        //update mole fractions in the variable vector for the open system
+	htotal_ = h_ - oh_ - co3_ - hco3_ ;//+ fe3_ ;
+	co2aqtotal_ = co2aq_ + co3_ + hco3_;		
+        Scalar totalMolarity = h2o_ + n2_ +  co2aqtotal_ + htotal_;
+	variable[CO2aqIdx] = co2aq_/totalMolarity;
+	variable[CO2aqtotalIdx] = co2aqtotal_/totalMolarity;
+        variable[HCO3Idx] = hco3_/totalMolarity;
+        variable[CO3Idx] = co3_/totalMolarity;
+        variable[OHIdx] = oh_/totalMolarity;
+        variable[HIdx] = h_/totalMolarity;
+        variable[HtotalIdx] = htotal_/totalMolarity;			
         }
 
         else if (phaseState == wPhaseOnly) //wPhaseOnly: solve a closed system with cTot concentration constant
         {
-			co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar);							
-            kw_ = constW(pressure_, temperature_);
+	co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar);							
+        kw_ = constW(pressure_, temperature_);
 
 
             Scalar tolAbs = 1e-20; //1e-11;old
@@ -191,8 +191,6 @@ public:
     // added by du
     static Scalar moleFracToMolarity(Scalar moleFracX, Scalar molarDensity)
     {
-        // if(moleFracX<0)
-        //     moleFracX=0;
         Scalar molarityX = moleFracX * molarDensity; 
         return molarityX;
     }
@@ -208,9 +206,7 @@ public:
 
    Scalar pH(const VolumeVariables &volVars)
    {
-      //Scalar mH = moleFracToMolality(volVars.moleFraction(wPhaseIdx,HIdx), volVars.moleFracSalinity(), volVars.moleFraction(wPhaseIdx,nCompIdx));  //[mol_H/kg_H2O]
       Scalar mH = moleFracToMolarity(volVars.moleFraction(wPhaseIdx,HIdx));  //[mol_H/kg_H2O]
-
       Scalar pH = -log10(mH);
          return pH;
 	  // printf("The value of pH is: %.e\n", pH); 
@@ -220,7 +216,6 @@ private:
 
     bool newton1D(Scalar &xVar, void (ThisType::*funcPtr)(Scalar), const Scalar tolAbs, const Scalar tolRel, const int maxIter)
     {
-        // printf("reached newton2"); // reached
         if (!Valgrind::CheckDefined(xVar))
         {
             std::cout << "----!Valgrind::CheckDefined(xVar) in chemistry \n";
@@ -308,14 +303,12 @@ private:
         return converge;
     }
 
-
-
      void H_Conly(Scalar activityH)
          {
 	 
          h_ = activityH;
          oh_ = kw_/h_;
-	 	 hco3_ = k1_*co2aq_/(h_);
+	 hco3_ = k1_*co2aq_/(h_);
          co3_ = k1_*k2_*co2aq_/(h_*h_);
 	 	
 	 	
@@ -328,7 +321,6 @@ private:
          Scalar fRight = xRight - kw_/xRight - k1_*co2aq_/xRight - 2*k1_*k2_*co2aq_/(xRight*xRight) ;
          Scalar fLeft =  xLeft - kw_/xLeft - k1_*co2aq_/xLeft - 2*k1_*k2_*co2aq_/(xLeft*xLeft) ;
          Scalar df = (fRight - fLeft)/2/eps/h_; // {f(x+dx) - f(x-dx)}/2dx
-	 
 	 
          fdf_[0] = f;
          fdf_[1] = df;
@@ -381,7 +373,7 @@ private:
     Scalar h2o_;
     Scalar co2aq_;
     Scalar co2aqtotal_;
-	Scalar co2g_;
+    Scalar co2g_;
     Scalar o2_;
     Scalar hco3_;
     Scalar co3_;
