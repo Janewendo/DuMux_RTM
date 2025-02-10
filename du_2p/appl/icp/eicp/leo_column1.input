@@ -1,0 +1,55 @@
+[Newton]
+MaxRelativeShift = 1e-8 # 1e-8 #
+MaxSteps = 40 #10
+TargetSteps = 15 #5
+MaxTimeStepDivisions= 40 #
+UseLineSearch = true
+
+[Model]
+PlausibilityTolerance = 1e-6 #
+pHMin = 2 #
+pHMax = 12 #
+uCurExtrapolation = 0 # 1: set uCur_ to a linear extrapolation from the last two timesteps 0: use the standard uCur_ = uPrev_
+
+[Problem]
+EnableGravity = true # enable gravity
+Name = EICPColumn1#
+Inverse = false # false for normal model, true for use as forward model in an inverse model run
+
+[Initial]
+initDensityW = 997.562 # 			[kg/m³]
+initPressure = 1.01325e5 # 			[Pa]		#BikeRim
+
+initxwCO2 = 2.3864e-7 #2.3864e-10 #2.3864e-7 #2.3864e-7 #	0.0 		[mol/mol]
+initxwH = 8.07096e-12 #5.72376e-7 # # 3.39516e-11  #	
+initGlass = 6.1e-1 #0.0545 	 #0.51 #0.0545 			[-]
+initTemperature = 298.15 # 333.15     [K] (60°C)
+
+
+[Injection]
+injVolumeflux = 5e-8 #5e-7  # 0  #5e-7  # 4.0e-6 #0.0e-6 # #2.0e-4 #4.0e-5 for5000s #4.0e-6 #2.0e-3 #9.06667e-7 # 9.06667e-7 # =54.4/60/1e6 #	//[m³/s] = [ml/min] /[s/min] /[ml/m³]
+
+injCO2 = 2.3864e-7 #10 #2.3864e-7 #2.3864e-7  #				 [kg/kg]		//equilibrium with atmospheric CO2 unter atmospheric pressure
+injH = 8.07096e-12
+injTemperature = 298.15 #       [K] (25°C)
+injPressure = 2e5 #             [Pa] estimated injection pressure for enthalpy calculations
+
+numInjections = 444 #52 #
+InjectionParamFile = ../injections/DuColumnInj.dat #
+[Vtk]
+AddVelocity = 1 # enable velocity output
+
+[TimeLoop]
+DtInitial = 0.01 #0.001 #0.005 #1# [s]
+TEnd = 5661000 #62208000 #10368000 #5184000 #2592000 #210965 # [s]		#
+MaxTimeStepSize = 200000 # [s]
+
+[Grid]
+LowerLeft = 0 0
+UpperRight = 1 1
+Cells = 20 2
+
+[SpatialParams]
+ReferencePorosity = 3.9e-1 # [-]
+CritPorosity = 0.0 # [-]		#Sand-filled experiments
+ReferencePermeability = 1.188E-11 #1.2094e-11 # [m^2]
