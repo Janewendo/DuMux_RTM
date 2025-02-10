@@ -66,6 +66,7 @@
 #include "indices.hh"
 #include "volumevariables.hh"
 #include "iofields.hh"
+#include "compositionalsecondarycomponent.hh"
 
 namespace Dumux {
 
@@ -93,6 +94,25 @@ struct OnePNCModelTraits
     static constexpr bool enableCompositionalDispersion() { return enableCompDisp; }
     static constexpr bool enableThermalDispersion() { return enableThermDisp; }
     static constexpr bool enableEnergyBalance() { return false; }
+	
+	    //specific stuff
+    static constexpr int numSecComponents() { return 5; }
+    static constexpr int numPhases() { return 1; }
+};
+
+template<class PV, class FSY, class FST, class SSY, class SST, class PT, class MT, class CO2Tab, class Chem>
+struct OnePNCVolumeVariablesTraits
+{
+    using PrimaryVariables = PV;
+    using FluidSystem = FSY;
+    using FluidState = FST;
+    using SolidSystem = SSY;
+    using SolidState = SST;
+    using PermeabilityType = PT;
+    using ModelTraits = MT;
+    //specific stuff
+    using CO2Tables = CO2Tab;
+    using Chemistry = Chem;
 };
 
 namespace Properties {
@@ -149,7 +169,7 @@ private:
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
     using ModelTraits = GetPropType<TypeTag, Properties::ModelTraits>;
 public:
-    using type = CompositionalFluidState<Scalar, FluidSystem>;
+    using type = CompositionalSecCompFluidState<Scalar, FluidSystem>;
 };
 
 //! Use the model after Millington (1961) for the effective diffusivity
@@ -182,6 +202,9 @@ private:
     static_assert(FSY::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid system");
     static_assert(FST::numPhases == MT::numFluidPhases(), "Number of phases mismatch between model and fluid state");
     using BaseTraits = OnePVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT>;
+    using Chemistry = GetPropType<TypeTag, Properties::Chemistry>;
+    using Traits = OnePNCVolumeVariablesTraits<PV, FSY, FST, SSY, SST, PT, MT, Dumux::ICP::CO2Tables, Chemistry>;
+
 
     using DT = GetPropType<TypeTag, Properties::MolecularDiffusionType>;
     using EDM = GetPropType<TypeTag, Properties::EffectiveDiffusivityModel>;
@@ -193,7 +216,7 @@ private:
     };
 
 public:
-    using type = OnePNCVolumeVariables<NCTraits<BaseTraits, DT, EDM>>;
+    using type = OnePNCVolumeVariables<NCTraits<Traits, DT, EDM>>;
 };
 
 //! Set the vtk output fields specific to this model
