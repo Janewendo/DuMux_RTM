@@ -20,8 +20,6 @@
 #include <dumux/common/boundarytypes.hh>
 #include <dumux/common/numeqvector.hh>
 #include <dumux/porousmediumflow/problem.hh>
-
-
 namespace Dumux {
 
 /*!
@@ -76,10 +74,14 @@ class OnePTwoCTestProblem : public PorousMediumFlowProblem<TypeTag>
         // component indices
         H2OIdx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::H2OIdx),
         N2Idx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::N2Idx),
-
+        CO2Idx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::CO2aqIdx),
+        HIdx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::HIdx),
+		
         // indices of the equations
         contiH2OEqIdx = Indices::conti0EqIdx + H2OIdx,
-        contiN2EqIdx = Indices::conti0EqIdx + N2Idx
+        contiN2EqIdx = Indices::conti0EqIdx + N2Idx,
+		contiCO2EqIdx = Indices::conti0EqIdx + CO2Idx,
+		contiHEqIdx = Indices::conti0EqIdx + HIdx,
     };
 
     //! Property that defines whether mole or mass fractions are used
@@ -146,6 +148,8 @@ public:
         if (globalPos[0] < eps_ )
         {
             values[N2Idx] = 2.0e-5;
+			values[CO2Idx] = 2.3864e-7;
+			values[HIdx] = 8.07096e-12;
         }
 
         return values;
@@ -194,7 +198,11 @@ public:
             values[contiH2OEqIdx] = (volVars.pressure() - dirichletPressure)*1e7;
             values[contiN2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, N2Idx)
                                                                      : volVars.massFraction(0, N2Idx));
-            return values;
+            values[contiCO2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, CO2Idx)
+                                                                     : volVars.massFraction(0, CO2Idx));
+            values[contiHEqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, HIdx)
+                                                                     : volVars.massFraction(0, HIdx));
+           return values;
         }
 
         // evaluate the pressure gradient
@@ -217,6 +225,8 @@ public:
         values[contiH2OEqIdx] = phaseFlux;
         // emulate an outflow condition for the component transport on the right side
         values[contiN2EqIdx] = phaseFlux * ( useMoles ? volVars.moleFraction(0, N2Idx) : volVars.massFraction(0, N2Idx) );
+        values[contiCO2EqIdx] = phaseFlux * ( useMoles ? volVars.moleFraction(0, CO2Idx) : volVars.massFraction(0, CO2Idx) );
+        values[contiHEqIdx] = phaseFlux * ( useMoles ? volVars.moleFraction(0, HIdx) : volVars.massFraction(0, HIdx) );
 
         return values;
     }
@@ -256,6 +266,8 @@ public:
         values[contiH2OEqIdx] = phaseFlux;
         // emulate an outflow condition for the component transport on the right side
         values[contiN2EqIdx] = phaseFlux * (useMoles ? volVars.moleFraction(0, N2Idx) : volVars.massFraction(0, N2Idx));
+        values[contiCO2EqIdx] = phaseFlux * (useMoles ? volVars.moleFraction(0, CO2Idx) : volVars.massFraction(0, CO2Idx));
+        values[contiHEqIdx] = phaseFlux * (useMoles ? volVars.moleFraction(0, HIdx) : volVars.massFraction(0, HIdx));
 
         return values;
     }
@@ -300,7 +312,9 @@ private:
     {
         PrimaryVariables priVars;
         priVars[pressureIdx] = 2e5 - 1e5*globalPos[0]; // initial condition for the pressure
-        priVars[N2Idx] = 0.0;  // initial condition for the N2 molefraction
+        priVars[N2Idx] = 2.0e-7;  // initial condition for the N2 molefraction
+        priVars[CO2Idx] = 2.3864e-9;  // initial condition for the CO2 molefraction
+        priVars[HIdx] = 8.07096e-14;  // initial condition for the CO2 molefraction
         return priVars;
     }
         static constexpr Scalar eps_ = 1e-6;
