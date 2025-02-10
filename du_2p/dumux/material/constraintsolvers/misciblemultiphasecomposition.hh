@@ -81,7 +81,7 @@ public:
     template <class FluidState, class ParameterCache>
     static void solve(FluidState &fluidState,
                       ParameterCache &paramCache,
-                      int knownPhaseIdx = 0) //, int ii = 0) //, double co2aqn = 0.00039) //, double ratio = 1)
+                      int knownPhaseIdx = 0)
     {
 #ifndef NDEBUG
         // currently this solver can only handle fluid systems which
@@ -100,19 +100,21 @@ public:
         for (int knownCompIdx = 0; knownCompIdx < numComponents-numMajorComponents; ++knownCompIdx)
         {
             xKnown[knownCompIdx] = fluidState.moleFraction(knownPhaseIdx, knownCompIdx + numMajorComponents);
-			// printf("reached here");
         }
-
+        xKnown[0] = fluidState.moleFraction(knownPhaseIdx, 2)-fluidState.moleFraction(knownPhaseIdx, 5)-fluidState.moleFraction(knownPhaseIdx, 6);
+        xKnown[1] = fluidState.moleFraction(knownPhaseIdx, 3)+fluidState.moleFraction(knownPhaseIdx, 4)+fluidState.moleFraction(knownPhaseIdx, 5)+fluidState.moleFraction(knownPhaseIdx, 6);
+		
         // compute all fugacity coefficients
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             paramCache.updatePhase(fluidState, phaseIdx);
-			
-			// TRUE
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-				Scalar fugCoeff = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
-                fluidState.setFugacityCoefficient(phaseIdx, compIdx, fugCoeff);
-			}
 
+            // since we assume ideal mixtures, the fugacity
+            // coefficients of the components cannot depend on
+            // composition, i.e. the parameters in the cache are valid
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                Scalar fugCoeff = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+                fluidState.setFugacityCoefficient(phaseIdx, compIdx, fugCoeff);
+            }
         }
 
 
@@ -124,19 +126,7 @@ public:
 
         // assemble the equations expressing the assumption that the
         // sum of all mole fractions in each phase must be 1
-        for (int phaseIdx = 0; phaseIdx < 1; ++phaseIdx) {
-            int rowIdx = numComponents*(numPhases - 1) + phaseIdx;
-		    Scalar OHIdx = FluidSystem::OHIdx;
-            b[rowIdx] = 1.0-fluidState.moleFraction(0, OHIdx);
-
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                int colIdx = phaseIdx*numComponents + compIdx;
-
-                M[rowIdx][colIdx] = 1.0;
-            }
-        }
-		// added by du
-        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             int rowIdx = numComponents*(numPhases - 1) + phaseIdx;
             b[rowIdx] = 1.0;
 
@@ -162,19 +152,19 @@ public:
         // fugacities of each component are equal in all phases
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
         {
-
             int col1Idx = compIdx;
-            const auto entryPhase0 = fluidState.fugacityCoefficient(0, compIdx)*fluidState.pressure(0);// *ratio;
+            const auto entryPhase0 = fluidState.fugacityCoefficient(0, compIdx)*fluidState.pressure(0);
 
             for (unsigned int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx)
             {
                 int rowIdx = (phaseIdx - 1)*numComponents + compIdx;
                 int col2Idx = phaseIdx*numComponents + compIdx;
                 M[rowIdx][col1Idx] = entryPhase0;
-                M[rowIdx][col2Idx] = -fluidState.fugacityCoefficient(phaseIdx, compIdx)*101325; // fluidState.pressure(phaseIdx);
+                M[rowIdx][col2Idx] = -fluidState.fugacityCoefficient(phaseIdx, compIdx)*fluidState.pressure(phaseIdx);
             }
         }
 
+        // preconditioning of M to reduce condition number
         for (int compIdx = 0; compIdx < numComponents; compIdx++)
         {
             // Multiply row of main component (Raoult's Law) with 10e-5 (order of magn. of pressure)
@@ -184,25 +174,8 @@ public:
             // Multiply row of sec. components (Henry's Law) with 10e-9 (order of magn. of Henry constant)
             else
                 M[compIdx] *= 10e-9;
-
         }
-		
-		//added by du
-        // Index of the equation/variable you want to exclude from being recalculated
-        Scalar CO2aqtotalIdx = FluidSystem::CO2aqtotalIdx;
-        Scalar CO2aqIdx = FluidSystem::CO2aqIdx; //also ctotal
-        Scalar CO3Idx = FluidSystem::CO3Idx;		
-        Scalar HCO3Idx = FluidSystem::HCO3Idx;		
-        Scalar co2aqn = (fluidState.moleFraction(0, CO2aqIdx)-fluidState.moleFraction(0, CO3Idx)-fluidState.moleFraction(0, HCO3Idx)) * fluidState.fugacityCoefficient(0, CO2aqIdx);
 
-		Scalar fixedIdx = CO2aqIdx;  // Set the index you want to exclude
-        Scalar fixedValue = co2aqn;  // Set the value for this index
-        for (int j = 0; j < numComponents * numPhases; ++j) {
-
-        M[fixedIdx][j] = (j == fixedIdx+numComponents) ? 1.0 : 0.0;
-        b[fixedIdx] = fixedValue * fluidState.pressure(0) / 101325 /fluidState.fugacityCoefficient(1, CO2aqIdx);
-        }
- 
         // solve for all mole fractions
         try { M.solve(x, b); }
         catch (Dune::FMatrixError & e) {
@@ -215,7 +188,8 @@ public:
             exit(1);
         }
 
-
+        // set all mole fractions and the the additional quantities in
+        // the fluid state
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 int rowIdx = phaseIdx*numComponents + compIdx;
