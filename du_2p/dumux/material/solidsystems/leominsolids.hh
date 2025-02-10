@@ -27,15 +27,9 @@
 #include <string>
 #include <dune/common/exceptions.hh>
 
-#include <dumux/material/components/urease.hh>
-#include <dumux/material/components/calcite.hh>
 #include <dumux/material/components/granite.hh>
-#include <dumux/material/components/ferrohydrite.hh>
 #include <dumux/material/components/glass.hh>
-#include <dumux/material/components/protoimogolite.hh>
-#include <dumux/material/components/birnessite.hh>
-#include <dumux/material/components/hydroxyapatite.hh>
-#include <dumux/material/components/sepiolite.hh>
+
 namespace Dumux {
 namespace SolidSystems {
 
