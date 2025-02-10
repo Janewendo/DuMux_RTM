@@ -70,12 +70,12 @@ public:
                 }
             }
 
-		co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar)-moleFracToMolarity(variable[CO3Idx],rhoMolar)-moleFracToMolarity(variable[HCO3Idx],rhoMolar);		
+	co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar)-moleFracToMolarity(variable[CO3Idx],rhoMolar)-moleFracToMolarity(variable[HCO3Idx],rhoMolar);		
         h_ = moleFracToMolarity(variable[HIdx],rhoMolar)+moleFracToMolarity(variable[OHIdx],rhoMolar)+moleFracToMolarity(variable[CO3Idx],rhoMolar)+moleFracToMolarity(variable[HCO3Idx],rhoMolar);	
 		
-		initH_ = 8.07096e-12;//h_; //Initial guess
+	initH_ = 8.07096e-12;//h_; //Initial guess
         Scalar activityH = initH_;		
-	    k1_ = const1(pressure_, temperature_);
+	k1_ = const1(pressure_, temperature_);
         k2_ = const2(pressure_, temperature_);
         kw_ = constW(pressure_, temperature_);
 		
@@ -83,7 +83,7 @@ public:
         Scalar tolRel = 1e-20;
         int maxIter = 500;
 		
-		if(newton1D(activityH, &ThisType::H_Conly, tolAbs, tolRel, maxIter) == false) //Alex' Newton
+	if(newton1D(activityH, &ThisType::H_Conly, tolAbs, tolRel, maxIter) == false) //Alex' Newton
          {
              initH_ = 8.07096e-12; //8.07096e-13 ;//h_;
 			 activityH = initH_;		
@@ -97,12 +97,14 @@ public:
              }
          }
 
-		H_Conly(activityH);
-		
+	H_Conly(activityH);
+	htotal_ = h_ - oh_ - co3_ - hco3_ ;
+	co2aqtotal_ = co2aq_ + co3_ + hco3_;
+	 
         Scalar totalMolarity = h2o_ + n2_ + co2aqtotal_ + htotal_; // du do not know
    
-		variable[CO2aqIdx] = co2aq_/totalMolarity;
-		variable[CO2aqtotalIdx] = co2aqtotal_/totalMolarity;
+	variable[CO2aqIdx] = co2aq_/totalMolarity;
+	variable[CO2aqtotalIdx] = co2aqtotal_/totalMolarity;
         variable[HCO3Idx] = hco3_/totalMolarity;
         variable[CO3Idx] = co3_/totalMolarity;
         variable[OHIdx] = oh_/totalMolarity;
@@ -136,8 +138,6 @@ public:
     // added by du
     static Scalar moleFracToMolarity(Scalar moleFracX, Scalar molarDensity)
     {
-        // if(moleFracX<0)
-        //     moleFracX=0;
         Scalar molarityX = moleFracX * molarDensity; 
         return molarityX;
     }
@@ -153,12 +153,9 @@ public:
 
    Scalar pH(const VolumeVariables &volVars)
    {
-      //Scalar mH = moleFracToMolality(volVars.moleFraction(wPhaseIdx,HIdx), volVars.moleFracSalinity(), volVars.moleFraction(wPhaseIdx,nCompIdx));  //[mol_H/kg_H2O]
       Scalar mH = moleFracToMolarity(volVars.moleFraction(0,HIdx));  //[mol_H/kg_H2O]
-
       Scalar pH = -log10(mH);
          return pH;
-	  // printf("The value of pH is: %.e\n", pH); 
    }
 
 
@@ -271,8 +268,8 @@ private:
         Scalar eps = 1e-8;
         Scalar xRight = h_ + eps*h_; // x + dx
         Scalar xLeft = h_ - eps*h_; // x - dx
-        Scalar fRight =  xRight  - kw_/xRight - k1_*co2aq_/xRight - 2*k1_*k2_*co2aq_/(xRight*xRight); // + totalnh_/(1+ka_/xRight); // f(x+dx)
-        Scalar fLeft =  xLeft - kw_/xLeft - k1_*co2aq_/xLeft - 2*k1_*k2_*co2aq_/(xLeft*xLeft); // + totalnh_/(1+ka_/xRight); // f(x+dx)
+        Scalar fRight =  xRight  - kw_/xRight - k1_*co2aq_/xRight - 2*k1_*k2_*co2aq_/(xRight*xRight); // f(x+dx)
+        Scalar fLeft =  xLeft - kw_/xLeft - k1_*co2aq_/xLeft - 2*k1_*k2_*co2aq_/(xLeft*xLeft); // f(x+dx)
         Scalar df = (fRight - fLeft)/2/eps/h_; // {f(x+dx) - f(x-dx)}/2dx
 
         fdf_[0] = f;
