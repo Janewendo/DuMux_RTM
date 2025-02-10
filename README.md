@@ -1,15 +1,17 @@
-Feb 10 Update 
+February 10 Update  
 <br> 
 
-I simplified the system to a 1-phase, 4 primary components, and 5 secondary components system, see Du_1p folder. I modified the code to be able to input free ion concentration, and calculate the total concentration in the mass balance equation. 
+I simplified the system to a 1-phase, 4 primary components, and 5 secondary components system, see Du_1p folder. I modified the code to be able to input free ion concentration, and calculate the total concentration in the mass balance equation.  
 <br>  
 
 The base code are from \dumux\test\porousmediumflow\1pnc\1p2c\isothermal. 
+<br> 
+
+The modification are recorded. You may check the 'update **.file' commit on Feb 10 to see changes made.  
 <br>  
 
-The modification are recorded. You may check the 'update **.file' commit on Feb 10 to see changes made. 
-<br>  
 
+   
 
 January 23 Update  
 <br>  
