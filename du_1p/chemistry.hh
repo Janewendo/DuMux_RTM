@@ -99,19 +99,6 @@ public:
 
 		H_Conly(activityH);
 		
-        //update mole fractions in the variable vector for the open system
-		htotal_ = h_ - oh_ - co3_ - hco3_ ;
-		co2aqtotal_ = co2aq_ + co3_ + hco3_;
-		
-		// printf("The value of htotal_ is: %.10e\n", htotal_);		
-		// printf("The value of co2aqtotal_ is: %.10e\n", co2aqtotal_);		
-		// printf("The value of co2aq_ is: %.10e\n", co2aq_);	
-		// printf("The value of h_ is: %.10e\n", h_);		
-		// printf("The value of co3_ is: %.10e\n", co3_);		
-		// printf("The value of hco3_ is: %.10e\n", hco3_);			
-		// printf("The value of oh_ is: %.10e\n", oh_);
-		// printf("The value of charge is: %.10e\n", h_ - oh_ -hco3_ -2*co3_);
-		
         Scalar totalMolarity = h2o_ + n2_ + co2aqtotal_ + htotal_; // du do not know
    
 		variable[CO2aqIdx] = co2aq_/totalMolarity;
@@ -121,14 +108,6 @@ public:
         variable[OHIdx] = oh_/totalMolarity;
         variable[HIdx] = h_/totalMolarity;
         variable[HtotalIdx] = htotal_/totalMolarity;
-
-		// printf("The value of 2htotal_ is: %.10e\n", variable[HtotalIdx]);		
-		// printf("The value of 2co2aqtotal_ is: %.10e\n", variable[CO2aqtotalIdx] );		
-		// printf("The value of 2co2aq_ is: %.10e\n", variable[CO2aqIdx]);	
-		// printf("The value of 2h_ is: %.10e\n", variable[HIdx]);		
-		// printf("The value of 2co3_ is: %.10e\n", variable[CO3Idx]);		
-		// printf("The value of 2hco3_ is: %.10e\n", variable[HCO3Idx]);			
-		// printf("The value of 2oh_ is: %.10e\n", variable[OHIdx]);
 
  }
 
@@ -277,31 +256,6 @@ private:
         return converge;
     }
 
-
-    // void H_Conly(Scalar activityCO2)
-    //     {
-	// 
-    //     co2aq_ = activityCO2;
-    //     oh_ = kw_/h_;
-	// 	hco3_ = k1_*co2aq_/(h_);
-    //     co3_ = k1_*k2_*co2aq_/(h_*h_);
-	// 	
-	// 	
-    //     //Solve the function
-    //     Scalar f = h_ - oh_ -  hco3_ - 2*co3_;
-    //     //Solve the derivative df/d(activityH)
-    //     Scalar eps = 1e-8;
-    //     Scalar xRight = co2aq_ + eps*co2aq_; // x + dx
-    //     Scalar xLeft = co2aq_ - eps*co2aq_; // x - dx
-    //     Scalar fRight =  h_  - oh_ - k1_*xRight/h_ - 2*k1_*k2_*xRight/(h_*h_); // + totalnh_/(1+ka_/xRight); // f(x+dx)
-    //     Scalar fLeft =  h_ - oh_ - k1_*xLeft/h_ - 2*k1_*k2_*xLeft/(h_*h_); // + totalnh_/(1+ka_/xRight); // f(x+dx)
-    //     Scalar df = (fRight - fLeft)/2/eps/co2aq_; // {f(x+dx) - f(x-dx)}/2dx
-	// 
-	// 
-    //     fdf_[0] = f;
-    //     fdf_[1] = df;
-    //  }
-
     void H_Conly(Scalar activityH)
         {
 
@@ -320,7 +274,6 @@ private:
         Scalar fRight =  xRight  - kw_/xRight - k1_*co2aq_/xRight - 2*k1_*k2_*co2aq_/(xRight*xRight); // + totalnh_/(1+ka_/xRight); // f(x+dx)
         Scalar fLeft =  xLeft - kw_/xLeft - k1_*co2aq_/xLeft - 2*k1_*k2_*co2aq_/(xLeft*xLeft); // + totalnh_/(1+ka_/xRight); // f(x+dx)
         Scalar df = (fRight - fLeft)/2/eps/h_; // {f(x+dx) - f(x-dx)}/2dx
-
 
         fdf_[0] = f;
         fdf_[1] = df;
@@ -395,10 +348,6 @@ private:
     bool newtonOrBisection_;
 
     static constexpr Scalar KpHb_ = 0;//9.14e-8;//[mol/kgH2O] Kim et al. 2000 //Not implemented by Anozie!!
-
-
-
-
 
 };
 
