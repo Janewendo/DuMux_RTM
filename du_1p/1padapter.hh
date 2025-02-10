@@ -77,6 +77,7 @@ public:
     //! for compositional models, the number of components has to be the same as in the multi-phase fluid system as the composition needs to be defined,
     //! while for non-compositional models, the number of components must equal the number of phases (1 in this case)
     static constexpr int numComponents = MultiPhaseFluidSystem::isMiscible() ? MultiPhaseFluidSystem::numComponents : numPhases;
+    static constexpr int numSecComponents = MultiPhaseFluidSystem::numSecComponents;
     //! number of components has to be the same as in the multi-phase fluid system as the composition needs to be defined
     static constexpr int phase0Idx = 0; //!< index of the only phase
 
