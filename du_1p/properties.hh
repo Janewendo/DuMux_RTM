@@ -26,14 +26,18 @@
 #include <dumux/discretization/box.hh>
 #include <dumux/discretization/evalsolution.hh>
 #include <dumux/discretization/evalgradients.hh>
-#include <dumux/porousmediumflow/1pnc/model.hh>
 
 
 #include <dumux/material/fluidsystems/h2on2.hh>
-#include <dumux/material/fluidsystems/1padapter.hh>
+// #include <dumux/material/fluidsystems/1padapter.hh>
 
 #include "problem.hh"
-#include "../spatialparams.hh"
+#include "spatialparams.hh"
+#include "leomin.hh"
+#include "co2tableslaboratoryhightemp.hh"
+#include "model.hh"
+#include "chemistry.hh"
+#include "1padapter.hh"
 
 namespace Dumux::Properties {
 
@@ -58,13 +62,24 @@ struct Grid<TypeTag, TTag::OnePTwoCTest> { using type = Dune::YaspGrid<2>; };
 template<class TypeTag>
 struct Problem<TypeTag, TTag::OnePTwoCTest> { using type = OnePTwoCTestProblem<TypeTag>; };
 
-// Set fluid configuration
+// set the fluidSystem
 template<class TypeTag>
 struct FluidSystem<TypeTag, TTag::OnePTwoCTest>
 {
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
-    using H2ON2 = FluidSystems::H2ON2<Scalar, FluidSystems::H2ON2DefaultPolicy</*simplified=*/true>>;
-    using type = FluidSystems::OnePAdapter<H2ON2, H2ON2::liquidPhaseIdx>;
+    // using CO2Tables = GetPropType<TypeTag, Properties::CO2Tables>;
+    using H2OTabulated = Components::TabulatedComponent<Components::H2O<Scalar>>;
+    using LeoMinFluid = Dumux::FluidSystems::LeoMinFluid<Scalar, Dumux::ICP::CO2Tables, H2OTabulated>;
+    using type = FluidSystems::OnePAdapter<LeoMinFluid, LeoMinFluid::wPhaseIdx>;
+
+};
+
+//Set the problem chemistry
+template<class TypeTag>
+struct Chemistry<TypeTag, TTag::OnePTwoCTest>
+{
+    using ModelTraits = GetPropType<TypeTag, Properties::ModelTraits>;
+    using type = Dumux::LeoMinCarbonicAcid<TypeTag, Dumux::ICP::CO2Tables, ModelTraits>;
 };
 
 // Set the spatial parameters

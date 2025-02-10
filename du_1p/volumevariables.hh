@@ -20,6 +20,8 @@
 #include <dumux/porousmediumflow/nonisothermal/volumevariables.hh>
 #include <dumux/material/solidstates/updatesolidvolumefractions.hh>
 
+#include "compositionalsecondarycomponent.hh"
+
 namespace Dumux {
 
 /*!
@@ -41,17 +43,23 @@ class OnePNCVolumeVariables
     using Scalar = typename Traits::PrimaryVariables::value_type;
     using PermeabilityType = typename Traits::PermeabilityType;
     using EffDiffModel = typename Traits::EffectiveDiffusivityModel;
-    using Idx = typename Traits::ModelTraits::Indices;
+
     static constexpr int numFluidComps = ParentType::numFluidComponents();
     using DiffusionCoefficients = typename Traits::DiffusionType::DiffusionCoefficientsContainer;
-
+    using ModelTraits = typename Traits::ModelTraits;
+    using Chemistry = typename Traits::Chemistry;
+    using Idx = typename ModelTraits::Indices;
     enum
     {
         // pressure primary variable index
-        pressureIdx = Idx::pressureIdx
+        pressureIdx = Idx::pressureIdx,
+        numComponents = ModelTraits::numFluidComponents(),
+        numSecComponents = ModelTraits::numSecComponents()
     };
 
 public:
+    //! return number of secondary components considered by the model
+    static constexpr int numSecFluidComponents() { return Traits::ModelTraits::numSecComponents(); }
     //! Export fluid state type
     using FluidState = typename Traits::FluidState;
     //! Export fluid system type
@@ -123,17 +131,24 @@ public:
 
         const auto& priVars = elemSol[scv.localDofIndex()];
         fluidState.setPressure(0, priVars[pressureIdx]);
-
+		
+        Dune::FieldVector<Scalar, numComponents + numSecComponents> moleFrac(0.0);
+		
         // Set fluid state mole fractions
         if (useMoles())
         {
             Scalar sumMoleFracNotMainComp = 0;
-            for (int compIdx = 1; compIdx < numFluidComps; ++compIdx)
+            for (int compIdx = 1; compIdx < numComponents; ++compIdx)
             {
                 fluidState.setMoleFraction(0, compIdx, priVars[compIdx]);
                 sumMoleFracNotMainComp += priVars[compIdx];
             }
-            fluidState.setMoleFraction(0, 0, 1.0 - sumMoleFracNotMainComp);
+			// set the fluid state for secondary components (only in water phase) to zero in the nPhaseOnly-case
+            for (int compIdx=numComponents; compIdx<numComponents+numSecComponents; ++compIdx)
+            {
+                fluidState.setMoleFractionSecComp(0, compIdx, 0);
+            }
+		    fluidState.setMoleFraction(0, 0, 1.0 - sumMoleFracNotMainComp);
         }
         else
         {
@@ -142,7 +157,12 @@ public:
             for (int compIdx = 1; compIdx < numFluidComps; ++compIdx)
                 fluidState.setMassFraction(0, compIdx, priVars[compIdx]);
         }
-
+		
+        for (int compIdx= 0; compIdx<numComponents; ++compIdx)
+        {
+            moleFrac[compIdx] =fluidState.moleFraction(0, compIdx);
+		}
+		
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
@@ -157,7 +177,27 @@ public:
         // compute and set the enthalpy
         Scalar h = EnergyVolVars::enthalpy(fluidState, paramCache, 0);
         fluidState.setEnthalpy(0, h);
+		
+		Chemistry chemistry;
+        chemistry.calculateEquilibriumChemistry(fluidState, moleFrac, rhoMolar);
+
+		// set the fluid state for secondary components (only in water phase) to zero in the nPhaseOnly-case
+        for (int compIdx=numComponents; compIdx<numComponents+numSecComponents; ++compIdx)
+        {
+            fluidState.setMoleFractionSecComp(0, compIdx, moleFrac[compIdx]);
+        }
+
+        Scalar sumMoleFracNotMainComp = 0;
+        for (int compIdx = 1; compIdx < numComponents; ++compIdx)
+        {
+            sumMoleFracNotMainComp += priVars[compIdx];
+        }
+		fluidState.setMoleFraction(0, 2, moleFrac[numComponents+3]);
+		fluidState.setMoleFraction(0, 3, moleFrac[numComponents+4]);
+		sumMoleFracNotMainComp = sumMoleFracNotMainComp  - priVars[2] - priVars[3] + moleFrac[numComponents+3] + moleFrac[numComponents+4];
+		fluidState.setMoleFraction(0, 0, 1.0 - sumMoleFracNotMainComp);
     }
+
 
     /*!
      * \brief Returns the fluid configuration at the given primary
