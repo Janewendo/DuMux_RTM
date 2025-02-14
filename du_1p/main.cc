@@ -27,7 +27,7 @@
 #include <dumux/linear/istlsolvers.hh>
 #include <dumux/linear/linearsolvertraits.hh>
 #include <dumux/linear/linearalgebratraits.hh>
-#include <dumux/nonlinear/newtonsolver.hh>
+// #include <dumux/nonlinear/newtonsolver.hh>
 
 #include <dumux/assembly/fvassembler.hh>
 
@@ -36,6 +36,7 @@
 #include <dumux/io/grid/gridmanager_ug.hh>
 
 #include "properties.hh"
+#include "newton.hh"
 
 int main(int argc, char** argv)
 {
@@ -118,7 +119,8 @@ int main(int argc, char** argv)
     auto linearSolver = std::make_shared<LinearSolver>(gridGeometry->gridView(), gridGeometry->dofMapper());
 
     // the non-linear solver
-    NewtonSolver<Assembler, LinearSolver> nonLinearSolver(assembler, linearSolver);
+    // NewtonSolver<Assembler, LinearSolver> nonLinearSolver(assembler, linearSolver);
+	LogarithmTransformationNewtonSolver<Assembler, LinearSolver> nonLinearSolver(assembler, linearSolver);
 
     // time loop
     timeLoop->start(); do
