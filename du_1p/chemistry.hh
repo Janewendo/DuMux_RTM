@@ -72,6 +72,8 @@ public:
 
 	co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar)-moleFracToMolarity(variable[CO3Idx],rhoMolar)-moleFracToMolarity(variable[HCO3Idx],rhoMolar);		
         h_ = moleFracToMolarity(variable[HIdx],rhoMolar)+moleFracToMolarity(variable[OHIdx],rhoMolar)+moleFracToMolarity(variable[CO3Idx],rhoMolar)+moleFracToMolarity(variable[HCO3Idx],rhoMolar);	
+	// co2aq_ = moleFracToMolarity(variable[CO2aqIdx],rhoMolar);
+        // h_ = moleFracToMolarity(variable[HIdx],rhoMolar);
 		
 	initH_ = 8.07096e-12;//h_; //Initial guess
         Scalar activityH = initH_;		
