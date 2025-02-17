@@ -106,7 +106,7 @@ public:
            int maxIter = 40;   
 			if(newton1D(activityH, &ThisType::H_Conly, tolAbs, tolRel, maxIter) == false) //Alex' Newton
             {
-                initCO2_ = 8.07096e-12 ; //8.07096e-13 ;//h_;
+                initH_ = 8.07096e-12 ; //8.07096e-13 ;//h_;
 				activityH = initH_;		
                 Scalar a0 = 0.0;
                 Scalar b0 = 1e-1;
