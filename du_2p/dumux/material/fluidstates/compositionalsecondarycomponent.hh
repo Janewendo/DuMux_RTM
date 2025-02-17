@@ -163,7 +163,7 @@ public:
 
 protected:
     //! zero-initialize all data members with braces syntax
-    Scalar moleFractionSecComp_[numPhases][numComponents] = {};
+    Scalar moleFractionSecComp_[numPhases][numSecComponents] = {};
 
 };
 
