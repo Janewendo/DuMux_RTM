@@ -279,24 +279,24 @@ public:
             for (int compIdx=numMajorComponents; compIdx<numComponents; ++compIdx)
             {
                 fluidState.setMoleFraction(knownPhaseIdx, compIdx, priVars[compIdx]);
-			            }
-		
-		   
-            MiscibleMultiPhaseComposition::solve(fluidState,
-                                                 paramCache,
-                                                 knownPhaseIdx);
-
+	    }
+	
             // set the fluid state for secondary components to zero for now. will be calculated later in the chemistry
-           for (int compIdx=numComponents; compIdx<numComponents+numSecComponents; ++compIdx)
+            for (int compIdx=numComponents; compIdx<numComponents+numSecComponents; ++compIdx)
             {
                 fluidState.setMoleFractionSecComp(wPhaseIdx, compIdx, 0);
                 fluidState.setMoleFractionSecComp(nPhaseIdx, compIdx, 0);
             }
+
+	    // get the mole fraction of H20 and N2 in aqueous phase, for chemistry calculation
+	    MiscibleMultiPhaseComposition::solve(fluidState,
+                                                 paramCache,
+                                                 knownPhaseIdx);
 												 
             for (int compIdx= 0; compIdx<numComponents+numSecComponents; ++compIdx)
             {
                 moleFrac[compIdx] =fluidState.moleFraction(wPhaseIdx, compIdx);
-			}			
+	    }			
 
         }
         //we don't really care about the unrealistic nPhaseOnly-case, most comonents are only in the water phase
@@ -398,18 +398,22 @@ public:
         fluidState.setEnthalpy(phaseIdx, h);
         }
 
-           Chemistry chemistry;
-           chemistry.calculateEquilibriumChemistry(fluidState, phasePresence, moleFrac, rhoMolar);
+        Chemistry chemistry;
+        chemistry.calculateEquilibriumChemistry(fluidState, phasePresence, moleFrac, rhoMolar);
 		      
-           fluidState.setMoleFraction(phase0Idx, CO2aqIdx, moleFrac[CO2aqtotalIdx]);
-	   fluidState.setMoleFraction(phase0Idx, HIdx, moleFrac[HtotalIdx]);
+        fluidState.setMoleFraction(phase0Idx, CO2aqIdx, moleFrac[CO2aqtotalIdx]);
+	fluidState.setMoleFraction(phase0Idx, HIdx, moleFrac[HtotalIdx]);
 
-           for (int compIdx=numComponents; compIdx<numComponents + numSecComponents; ++compIdx)
-           {
-               fluidState.setMoleFractionSecComp(phase0Idx, compIdx, moleFrac[compIdx]);
-               fluidState.setMoleFractionSecComp(phase1Idx, compIdx, 0);
-           }
-
+        for (int compIdx=numComponents; compIdx<numComponents + numSecComponents; ++compIdx)
+        {
+        fluidState.setMoleFractionSecComp(phase0Idx, compIdx, moleFrac[compIdx]);
+        fluidState.setMoleFractionSecComp(phase1Idx, compIdx, 0);
+        }
+	
+	Scalar knownPhaseIdx = phase0Idx;
+	MiscibleMultiPhaseComposition::solve(fluidState,
+                                     paramCache,
+                                     knownPhaseIdx);	
     }
 
     /*!
