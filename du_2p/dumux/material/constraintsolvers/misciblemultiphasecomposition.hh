@@ -101,8 +101,6 @@ public:
         {
             xKnown[knownCompIdx] = fluidState.moleFraction(knownPhaseIdx, knownCompIdx + numMajorComponents);
         }
-        xKnown[0] = fluidState.moleFraction(knownPhaseIdx, 2)-fluidState.moleFraction(knownPhaseIdx, 5)-fluidState.moleFraction(knownPhaseIdx, 6);
-        xKnown[1] = fluidState.moleFraction(knownPhaseIdx, 3)+fluidState.moleFraction(knownPhaseIdx, 4)+fluidState.moleFraction(knownPhaseIdx, 5)+fluidState.moleFraction(knownPhaseIdx, 6);
 		
         // compute all fugacity coefficients
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -163,7 +161,30 @@ public:
                 M[rowIdx][col2Idx] = -fluidState.fugacityCoefficient(phaseIdx, compIdx)*fluidState.pressure(phaseIdx);
             }
         }
+        // added by du
+	int compIdx = 2;
+        int col1Idx = compIdx;
+        const auto entryPhase0 = fluidState.fugacityCoefficient(0, compIdx)*fluidState.pressure(0);
 
+        for (unsigned int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx)
+        {
+            int rowIdx = (phaseIdx - 1)*numComponents + compIdx;
+            int col2Idx = phaseIdx*numComponents + compIdx;
+            M[rowIdx][col1Idx] = entryPhase0*(fluidState.moleFraction(0, 2)-fluidState.moleFraction(0, 5)-fluidState.moleFraction(0, 6))/fluidState.moleFraction(0, 2);
+            M[rowIdx][col2Idx] = -fluidState.fugacityCoefficient(phaseIdx, compIdx)*fluidState.pressure(phaseIdx); //101325; // ;
+        }
+	compIdx = 3;
+        col1Idx = compIdx;
+        const auto entryPhase1 = fluidState.fugacityCoefficient(0, compIdx)*fluidState.pressure(0);
+
+        for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx)
+        {
+            int rowIdx = (phaseIdx - 1)*numComponents + compIdx;
+            int col2Idx = phaseIdx*numComponents + compIdx;
+            M[rowIdx][col1Idx] = entryPhase1*(fluidState.moleFraction(0, 3)+fluidState.moleFraction(0, 4)+fluidState.moleFraction(0, 5)+fluidState.moleFraction(0, 6))/fluidState.moleFraction(0, 3);
+            M[rowIdx][col2Idx] = -fluidState.fugacityCoefficient(phaseIdx, compIdx)*fluidState.pressure(phaseIdx); //101325; // ;
+        }
+	    
         // preconditioning of M to reduce condition number
         for (int compIdx = 0; compIdx < numComponents; compIdx++)
         {
