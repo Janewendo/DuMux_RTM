@@ -76,7 +76,10 @@ class OnePTwoCTestProblem : public PorousMediumFlowProblem<TypeTag>
         N2Idx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::N2Idx),
         CO2Idx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::CO2aqIdx),
         HIdx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::HIdx),
-		
+        CO3Idx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::CO3Idx),
+        OHIdx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::OHIdx),
+        HCO3Idx = FluidSystem::compIdx(FluidSystem::MultiPhaseFluidSystem::HCO3Idx),	
+
         // indices of the equations
         contiH2OEqIdx = Indices::conti0EqIdx + H2OIdx,
         contiN2EqIdx = Indices::conti0EqIdx + N2Idx,
@@ -127,9 +130,9 @@ public:
     {
         BoundaryTypes values;
 
-        if(globalPos[0] < eps_)
-            values.setAllDirichlet();
-        else
+        // if(globalPos[0] < eps_)
+        //     values.setAllDirichlet();
+        // else
             values.setAllNeumann();
 
         return values;
@@ -183,14 +186,25 @@ public:
         // no-flow everywhere except at the right boundary
         NumEqVector values(0.0);
         const auto xMax = this->gridGeometry().bBoxMax()[0];
-        const auto& ipGlobal = scvf.ipGlobal();
-        if (ipGlobal[0] < xMax - eps_)
-            return values;
+        const auto& ipGlobal = scvf.ipGlobal();            
 
         // set a fixed pressure on the right side of the domain
         static const Scalar dirichletPressure = 1e5;
         const auto& volVars = elemVolVars[scvf.insideScvIdx()];
         const auto& fluxVarsCache = elemFluxVarsCache[scvf];
+
+        if (ipGlobal[0] < xMax - eps_)
+        {
+            values[contiH2OEqIdx] = -1e2;
+
+            values[contiN2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, N2Idx)
+                                                                     : volVars.massFraction(0, N2Idx));
+            values[contiCO2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, CO2Idx) //-volVars.moleFraction(0, CO3Idx)-volVars.moleFraction(0, HCO3Idx)
+                                                                     : volVars.massFraction(0, CO2Idx));
+            values[contiHEqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, HIdx) //+volVars.moleFraction(0, CO3Idx)+volVars.moleFraction(0, HCO3Idx)+volVars.moleFraction(0, OHIdx)
+                                                                     : volVars.massFraction(0, HIdx));
+            return values;
+        }
 
         // if specified in the input file, use a Nitsche type boundary condition for the box model.
         if (useNitscheTypeBc_)
@@ -198,9 +212,9 @@ public:
             values[contiH2OEqIdx] = (volVars.pressure() - dirichletPressure)*1e7;
             values[contiN2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, N2Idx)
                                                                      : volVars.massFraction(0, N2Idx));
-            values[contiCO2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, CO2Idx)
+            values[contiCO2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, CO2Idx) //-volVars.moleFraction(0, CO3Idx)-volVars.moleFraction(0, HCO3Idx)
                                                                      : volVars.massFraction(0, CO2Idx));
-            values[contiHEqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, HIdx)
+            values[contiHEqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, HIdx) //+volVars.moleFraction(0, CO3Idx)+volVars.moleFraction(0, HCO3Idx)+volVars.moleFraction(0, OHIdx)
                                                                      : volVars.massFraction(0, HIdx));
            return values;
         }
@@ -228,6 +242,7 @@ public:
         values[contiCO2EqIdx] = phaseFlux * ( useMoles ? volVars.moleFraction(0, CO2Idx) : volVars.massFraction(0, CO2Idx) );
         values[contiHEqIdx] = phaseFlux * ( useMoles ? volVars.moleFraction(0, HIdx) : volVars.massFraction(0, HIdx) );
 
+        // values=(0.0);
         return values;
     }
 
@@ -269,6 +284,7 @@ public:
         values[contiCO2EqIdx] = phaseFlux * (useMoles ? volVars.moleFraction(0, CO2Idx) : volVars.massFraction(0, CO2Idx));
         values[contiHEqIdx] = phaseFlux * (useMoles ? volVars.moleFraction(0, HIdx) : volVars.massFraction(0, HIdx));
 
+        // values=(0.0);
         return values;
     }
 
@@ -311,10 +327,10 @@ private:
     PrimaryVariables initial_(const GlobalPosition &globalPos) const
     {
         PrimaryVariables priVars;
-        priVars[pressureIdx] = 2e5 - 1e5*globalPos[0]; // initial condition for the pressure
+        priVars[pressureIdx] = 2e5; // - 1e5*globalPos[0]; // initial condition for the pressure
         priVars[N2Idx] = 2.0e-7;  // initial condition for the N2 molefraction
         priVars[CO2Idx] = 2.3864e-9;  // initial condition for the CO2 molefraction
-        priVars[HIdx] = 8.07096e-14;  // initial condition for the CO2 molefraction
+        priVars[HIdx] = 1.39562e-10;  // initial condition for the CO2 molefraction
         return priVars;
     }
         static constexpr Scalar eps_ = 1e-6;
