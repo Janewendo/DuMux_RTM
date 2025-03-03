@@ -115,13 +115,16 @@ int main(int argc, char** argv)
     auto assembler = std::make_shared<Assembler>(problem, gridGeometry, gridVariables, timeLoop, xOld);
 
     // the linear solver
-    using LinearSolver = ILUBiCGSTABIstlSolver<LinearSolverTraits<GridGeometry>, LinearAlgebraTraitsFromAssembler<Assembler>>;
-    auto linearSolver = std::make_shared<LinearSolver>(gridGeometry->gridView(), gridGeometry->dofMapper());
+    // using LinearSolver = ILUBiCGSTABIstlSolver<LinearSolverTraits<GridGeometry>, LinearAlgebraTraitsFromAssembler<Assembler>>;
+    // auto linearSolver = std::make_shared<LinearSolver>(gridGeometry->gridView(), gridGeometry->dofMapper());
 
+    using LinearSolver = Dumux::UMFPackIstlSolver<SeqLinearSolverTraits, LinearAlgebraTraitsFromAssembler<Assembler>>;
+    auto linearSolver = std::make_shared<LinearSolver>();
+	
     // the non-linear solver
     // NewtonSolver<Assembler, LinearSolver> nonLinearSolver(assembler, linearSolver);
 	LogarithmTransformationNewtonSolver<Assembler, LinearSolver> nonLinearSolver(assembler, linearSolver);
-
+	
     // time loop
     timeLoop->start(); do
     {
