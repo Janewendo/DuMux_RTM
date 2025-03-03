@@ -48,10 +48,12 @@ public:
         for (int i = 0; i < VolumeVariables::numFluidComponents()+ VolumeVariables::numSecFluidComponents(); ++i)
            out.addVolumeVariable([i](const auto& volVars){ return volVars.moleFraction(0, i); },
                                      IOName::moleFraction<FluidSystem>(0, i));
+        out.addVolumeVariable([](const auto& volVars){ return (volVars.moleFraction(0,2)-volVars.moleFraction(0,5)-volVars.moleFraction(0,6)); },
+                                IOName::moleFraction<FluidSystem>(0,2));
+								
+        out.addVolumeVariable([](const auto& volVars){ return (volVars.moleFraction(0,3)+volVars.moleFraction(0,4)+volVars.moleFraction(0,5)+volVars.moleFraction(0,6)); },
+                                IOName::moleFraction<FluidSystem>(0,3));
 
-        for (int i = 0; i < VolumeVariables::numFluidComponents()+ VolumeVariables::numSecFluidComponents(); ++i)
-           out.addVolumeVariable([i](const auto& volVars){ return volVars.massFraction(0, i); },
-                                     IOName::massFraction<FluidSystem>(0, i));
         for (int i = 0; i < VolumeVariables::numFluidComponents() + VolumeVariables::numSecFluidComponents(); ++i)
         {
             out.addVolumeVariable([i](const auto& volVars){ return volVars.moleFraction(0,i) *volVars.molarDensity(0); },
