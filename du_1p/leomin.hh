@@ -215,7 +215,7 @@ public:
      * Component related static parameters
      ****************************************/
 
-    static const int numComponents = 4; // Water, N2,  CO2
+    static const int numComponents = 4; // Water, N2,  CO2, H
     // static const int numMajorComponents = 2; //Water, N2
 	static const int numSecComponents = 5; // h_total, co3, oh,  hco3, co2(aq)_total
     static const int H2OIdx =  0;
@@ -378,7 +378,7 @@ public:
         {
             // assume pure water
             if (Policy::useH2ODensityAsLiquidMixtureDensity())
-                return H2O::liquidDensity(T, p);
+                return H2O::liquidDensity(T, 150000);//p);
 
             // See: Eq. (7) in Class et al. (2002a)
             // This assumes each gas molecule displaces exactly one
@@ -421,7 +421,7 @@ public:
         {
             // assume pure water or that each gas molecule displaces exactly one
             // molecule in the liquid.
-            return H2O::liquidMolarDensity(T, p);
+            return H2O::liquidMolarDensity(T, 150000);//p);
         }
         else
         {
@@ -462,7 +462,7 @@ public:
         if (phaseIdx == wPhaseIdx) {
             // assume pure water for the liquid phase
 			// printf("The value of H2O::liquidViscosity(T, p) is: %.e\n", H2O::liquidViscosity(T, p)); 
-            return H2O::liquidViscosity(T, p);
+            return H2O::liquidViscosity(T, 150000);//p);
 			
         }
 
