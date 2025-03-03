@@ -91,9 +91,20 @@ struct SpatialParams<TypeTag, TTag::OnePTwoCTest>
     using type = OnePNCTestSpatialParams<GridGeometry, Scalar>;
 };
 
+//! Use the box facet coupling-specific Ficks's law
+template<class TypeTag>
+struct MolecularDiffusionType<TypeTag, TTag::OnePTwoCTest>
+{
+    using type = FicksLaw< TypeTag,ReferenceSystemFormulation::molarAveraged>;
+};
+
 // Define whether mole(true) or mass (false) fractions are used
 template<class TypeTag>
 struct UseMoles<TypeTag, TTag::OnePTwoCTest> { static constexpr bool value = true; };
+
+
 } // end namespace Dumux::Properties
+
+
 
 #endif
