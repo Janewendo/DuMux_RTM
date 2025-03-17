@@ -51,30 +51,68 @@ private:
      */
     bool solveLinearSystem_(ResidualVector& deltaU) override
     {
+        // auto jacobian = this->assembler().jacobian();  // Get the Jacobian matrix
+        // // Print custom text
+        // std::cout << "Printing the JC matrix:\n";
+        // // Iterate over rows and columns to print the matrix
+        // for (const auto& row : jacobian) {
+        //     for (const auto& elem : row) {
+        //         std::cout << elem << " ";  // Print each element in the row
+        //     }
+        //     std::cout << std::endl;  // Print a newline after each row
+        // }
+
+
         static const bool useLogTranformation = getParam<bool>("Newton.UseLogTransformation", false);
-        if (!useLogTranformation)
+        if (!useLogTranformation){
+            printf("JC\n");
+            Dune::printmatrix(std::cout, this->assembler().jacobian(), "", "", 10/*width*/, 2/*precision*/);
+            printf("deltaU\n");
+            Dune::printvector(std::cout, deltaU, "", "", 10/*width*/, 2/*precision*/);       
+            printf("residual\n");
+            Dune::printvector(std::cout, this->assembler().residual(), "", "", 10/*width*/, 2/*precision*/);
+
             return this->linearSolver().solve(
-                this->assembler().jacobian(), deltaU, this->assembler().residual()
+                this->assembler().jacobian(),deltaU, this->assembler().residual());
 				
-            );	
+        }
 
         // Solve the linear system in a modified way
         auto JLogC = this->assembler().jacobian(); // copy
         auto deltaLogC = deltaU; // copy
+        auto residual = this->assembler().residual(); // copy
         // modify the Jacobian by multiplying each molefraction derivative by the molefraction itself
         // JLogC = dR/dlnC = J * dC/dlnC
         // dx/dlnx = (dlnx/dx)^-1 = (1/x)^-1 = x
-        for (auto rowIt = JLogC.begin(); rowIt != JLogC.end(); ++rowIt)
-            for (auto colIt = rowIt->begin(); colIt != rowIt->end(); ++colIt)
-                for (int i = 0; i < colIt->M(); ++i)
-                    for (int j = 1; j < colIt->N(); ++j)
-                        (*colIt)[i][j] *= uLastIter_[colIt.index()][j];
+        // for (auto rowIt = JLogC.begin(); rowIt != JLogC.end(); ++rowIt)
+        //     for (auto colIt = rowIt->begin(); colIt != rowIt->end(); ++colIt)
+        //         for (int i = 0; i < colIt->M(); ++i)
+        //             for (int j = 1; j < colIt->N(); ++j)
+        //                 (*colIt)[i][j] *= uLastIter_[colIt.index()][j];
+
+        for (auto i = 0UL; i < residual.size(); ++i)
+            for (int j = 1; j < residual[i].size(); ++j)
+                residual[i][j] /= uLastIter_[i][j];
 
         bool converged = this->linearSolver().solve(
             JLogC,
             deltaLogC,
-            this->assembler().residual()
+            residual
         );
+        printf("JLogC\n");
+        Dune::printmatrix(std::cout, JLogC, "", "", 10/*width*/, 2/*precision*/);
+        printf("deltaLogC\n");
+        Dune::printvector(std::cout, deltaLogC, "", "", 10/*width*/, 2/*precision*/);       
+        printf("residual\n");
+        Dune::printvector(std::cout, residual, "", "", 10/*width*/, 2/*precision*/);
+
+// 
+        // bool converged = this->linearSolver().solve(
+        //     JLogC,
+        //     deltaLogC,
+        //     this->assembler().residual()
+        // );
+// 
         if (!converged)
             DUNE_THROW(Dumux::NumericalProblem, "Linear solver did not converge.");
 
@@ -87,9 +125,13 @@ private:
             // lnCNew = lnCOld - deltaLnC
             // => CNew = COld * exp(-deltaLnC) = COld - deltaC
             // => deltaC = COld - COld * exp(-deltaLnC)
-            for (int j = 1; j < deltaU[i].size(); ++j)
+            for (int j = 1; j < deltaU[i].size(); ++j){
+                // deltaLogC[i][j] = std::copysign(std::min(5.0, std::abs(deltaLogC[i][j])), deltaLogC[i][j]);
                 deltaU[i][j] = uLastIter_[i][j] -  uLastIter_[i][j]*std::exp(-deltaLogC[i][j]);
         }
+        }
+        printf("deltaU\n");
+        Dune::printvector(std::cout, deltaU, "", "", 10/*width*/, 2/*precision*/); 
         return converged;
     }
 private:
