@@ -195,7 +195,7 @@ public:
 
         if (ipGlobal[0] < xMax - eps_)
         {
-            values[contiH2OEqIdx] = -1e2;
+            values[contiH2OEqIdx] = -5e-8;
 
             values[contiN2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, N2Idx)
                                                                      : volVars.massFraction(0, N2Idx));
@@ -203,12 +203,15 @@ public:
                                                                      : volVars.massFraction(0, CO2Idx));
             values[contiHEqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, HIdx) //+volVars.moleFraction(0, CO3Idx)+volVars.moleFraction(0, HCO3Idx)+volVars.moleFraction(0, OHIdx)
                                                                      : volVars.massFraction(0, HIdx));
+            // printf("The value of molefraction: %5e\n", volVars.moleFraction(0, N2Idx));
+            // printf("The value of N2Flux: %f\n", values[contiN2EqIdx]);
             return values;
         }
 
         // if specified in the input file, use a Nitsche type boundary condition for the box model.
         if (useNitscheTypeBc_)
         {
+            values[contiH2OEqIdx] = 5e-8;
             values[contiH2OEqIdx] = (volVars.pressure() - dirichletPressure)*1e7;
             values[contiN2EqIdx] = values[contiH2OEqIdx] * (useMoles ? volVars.moleFraction(0, N2Idx)
                                                                      : volVars.massFraction(0, N2Idx));
